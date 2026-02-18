@@ -1,0 +1,59 @@
+[
+    {
+        "book_id": "2a933128-6a22-442e-bd79-80a0562acf48",
+        "title": "Čtvrté křídlo",
+        "author": "Rebecca Yarros",
+        "total_duration_seconds": 97560,
+        "cover_url": "https://www.elredo.cz/cover/45ecbdcc907d102062c5db300de4a78b?width=386&height=386",
+        "chapters": [
+            { "id": 1, "title": "Introduction", "start_time": 0 },
+            { "id": 2, "title": "Chapter 1", "start_time": 600 },
+            { "id": 3, "title": "Chapter 2", "start_time": 1200 },
+            { "id": 4, "title": "Chapter 3", "start_time": 1800 },
+            { "id": 5, "title": "Chapter 4", "start_time": 2400 },
+            { "id": 6, "title": "Chapter 5", "start_time": 3000 },
+            { "id": 7, "title": "Chapter 6", "start_time": 3600 },
+            { "id": 8, "title": "Chapter 7", "start_time": 4200 },
+            { "id": 9, "title": "Chapter 8", "start_time": 4800 },
+            { "id": 10, "title": "Chapter 9", "start_time": 5400 }
+        ]
+    },
+    {
+        "book_id": "03f2dd58-3cce-43a8-86b9-9f15e824d36c",
+        "title": "Dech",
+        "author": "James Nestor",
+        "total_duration_seconds": 32940,
+        "cover_url": "https://www.elredo.cz/cover/8cd21fa3545bb954f37ab55198d5ab05?width=386&height=386",
+        "chapters": [
+            { "id": 1, "title": "Introduction", "start_time": 0 },
+            { "id": 2, "title": "Chapter 1", "start_time": 254 },
+            { "id": 3, "title": "Chapter 2", "start_time": 508 },
+            { "id": 4, "title": "Chapter 3", "start_time": 762 },
+            { "id": 5, "title": "Chapter 4", "start_time": 1016 },
+            { "id": 6, "title": "Chapter 5", "start_time": 1270 },
+            { "id": 7, "title": "Chapter 6", "start_time": 1524 },
+            { "id": 8, "title": "Chapter 7", "start_time": 1778 },
+            { "id": 9, "title": "Chapter 8", "start_time": 2032 },
+            { "id": 10, "title": "Chapter 9", "start_time": 2286 }
+        ]
+    },
+    {
+        "book_id": "0f65cfee-f1c1-4a18-8ef3-4cf8838dd781",
+        "title": "Šikmý kostel",
+        "author": "Karin Lednická",
+        "total_duration_seconds": 59700,
+        "cover_url": "https://www.elredo.cz/cover/832fb9612bf3b4015b99e67099308c4f?width=386&height=386",
+        "chapters": [
+            { "id": 1, "title": "Introduction", "start_time": 0 },
+            { "id": 2, "title": "Chapter 1", "start_time": 3600 },
+            { "id": 3, "title": "Chapter 2", "start_time": 7200 },
+            { "id": 4, "title": "Chapter 3", "start_time": 10800 },
+            { "id": 5, "title": "Chapter 4", "start_time": 14400 },
+            { "id": 6, "title": "Chapter 5", "start_time": 18000 },
+            { "id": 7, "title": "Chapter 6", "start_time": 21600 },
+            { "id": 8, "title": "Chapter 7", "start_time": 25200 },
+            { "id": 9, "title": "Chapter 8", "start_time": 28800 },
+            { "id": 10, "title": "Chapter 9", "start_time": 32400 }
+        ]
+    }
+]
