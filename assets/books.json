@@ -5,6 +5,7 @@
         "author": "Rebecca Yarros",
         "total_duration_seconds": 97560,
         "cover_url": "https://www.elredo.cz/cover/45ecbdcc907d102062c5db300de4a78b?width=386&height=386",
+        "audio_preview_url": "https://streaming.bookup.cz/000/935/397/85940504382861_1_001001_imp_prev.mp3",
         "chapters": [
             { "id": 1, "title": "Introduction", "start_time": 0 },
             { "id": 2, "title": "Chapter 1", "start_time": 600 },
@@ -24,6 +25,7 @@
         "author": "James Nestor",
         "total_duration_seconds": 32940,
         "cover_url": "https://www.elredo.cz/cover/8cd21fa3545bb954f37ab55198d5ab05?width=386&height=386",
+        "audio_preview_url": "https://streaming.bookup.cz/000/813/450/progresguru_741_1_001001_imp_prev.mp3",
         "chapters": [
             { "id": 1, "title": "Introduction", "start_time": 0 },
             { "id": 2, "title": "Chapter 1", "start_time": 254 },
@@ -43,6 +45,7 @@
         "author": "Karin Lednická",
         "total_duration_seconds": 59700,
         "cover_url": "https://www.elredo.cz/cover/832fb9612bf3b4015b99e67099308c4f?width=386&height=386",
+        "audio_preview_url": "https://streaming.bookup.cz/000/580/521/85941694832521_1_001001_imp_prev.mp3",
         "chapters": [
             { "id": 1, "title": "Introduction", "start_time": 0 },
             { "id": 2, "title": "Chapter 1", "start_time": 3600 },
