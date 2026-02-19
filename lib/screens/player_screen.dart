@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../main.dart';
 import '../models.dart';
+import '../volume_button_listener.dart';
 import '../widgets/insight_capture_sheet.dart';
+import 'capture_settings_screen.dart';
 import 'insights_screen.dart';
 
 class PlayerScreen extends StatefulWidget {
@@ -20,9 +22,10 @@ class _PlayerScreenState extends State<PlayerScreen>
   bool _isPlaying = false;
   Timer? _timer;
   double _playbackSpeed = 1.0;
-  final OffsetPrecision _precision = OffsetPrecision.medium;
   bool _isDragging = false;
   double _dragValue = 0;
+
+  final _volumeListener = VolumeButtonListener();
 
   late AnimationController _captureAnimController;
   late Animation<double> _captureAnim;
@@ -38,10 +41,12 @@ class _PlayerScreenState extends State<PlayerScreen>
       CurvedAnimation(
           parent: _captureAnimController, curve: Curves.elasticOut),
     );
+    _syncVolumeListener();
   }
 
   @override
   void dispose() {
+    _volumeListener.stopListening();
     _timer?.cancel();
     _captureAnimController.dispose();
     super.dispose();
@@ -105,9 +110,21 @@ class _PlayerScreenState extends State<PlayerScreen>
     });
   }
 
+  // ── Volume listener sync ──
+
+  void _syncVolumeListener() {
+    final enabled = captureSettingsService.settings.volumeCaptureEnabled;
+    if (enabled) {
+      _volumeListener.startListening((_) => _captureInsight());
+    } else {
+      _volumeListener.stopListening();
+    }
+  }
+
   // ── Insight Catcher ──
 
   void _captureInsight() {
+    final settings = captureSettingsService.settings;
     HapticFeedback.mediumImpact();
     _captureAnimController.forward().then((_) {
       _captureAnimController.reverse();
@@ -117,20 +134,36 @@ class _PlayerScreenState extends State<PlayerScreen>
     final insight = insightService.addInsight(
       bookId: widget.book.bookId,
       timestampSeconds: _positionSeconds,
-      precision: _precision,
+      precision: settings.defaultPrecision,
       chapterTitle: chapter.title,
     );
 
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => InsightCaptureSheet(
-        insight: insight,
-        onSaved: () => setState(() {}),
-        onDeleted: () => setState(() {}),
-      ),
+    if (settings.showCaptureSheet) {
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (_) => InsightCaptureSheet(
+          insight: insight,
+          autoAiSummary: settings.autoAiSummary,
+          onSaved: () => setState(() {}),
+          onDeleted: () => setState(() {}),
+        ),
+      );
+    } else {
+      // Silent capture — just refresh the UI.
+      setState(() {});
+    }
+  }
+
+  void _openSettings() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const CaptureSettingsScreen()),
     );
+    // Re-sync volume listener in case the toggle changed.
+    _syncVolumeListener();
+    setState(() {});
   }
 
   void _openInsightsScreen() async {
@@ -573,10 +606,10 @@ class _PlayerScreenState extends State<PlayerScreen>
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.nightlight_round_outlined),
+            icon: const Icon(Icons.tune_rounded),
             color: Colors.white.withAlpha(180),
             iconSize: 24,
-            onPressed: () {},
+            onPressed: _openSettings,
           ),
         ],
       ),

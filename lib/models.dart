@@ -120,3 +120,18 @@ class Insight {
         'created_at': createdAt.toIso8601String(),
       };
 }
+
+/// User-configurable defaults for quick-capture (volume button / headphone).
+class CaptureSettings {
+  OffsetPrecision defaultPrecision;
+  bool showCaptureSheet;
+  bool volumeCaptureEnabled;
+  bool autoAiSummary;
+
+  CaptureSettings({
+    this.defaultPrecision = OffsetPrecision.medium,
+    this.showCaptureSheet = true,
+    this.volumeCaptureEnabled = true,
+    this.autoAiSummary = false,
+  });
+}

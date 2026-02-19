@@ -5,12 +5,14 @@ import '../main.dart';
 
 class InsightCaptureSheet extends StatefulWidget {
   final Insight insight;
+  final bool autoAiSummary;
   final VoidCallback onSaved;
   final VoidCallback onDeleted;
 
   const InsightCaptureSheet({
     super.key,
     required this.insight,
+    this.autoAiSummary = false,
     required this.onSaved,
     required this.onDeleted,
   });
@@ -23,12 +25,19 @@ class _InsightCaptureSheetState extends State<InsightCaptureSheet> {
   late OffsetPrecision _precision;
   final _noteController = TextEditingController();
   final _noteFocus = FocusNode();
+  bool _aiLoading = false;
 
   @override
   void initState() {
     super.initState();
     _precision = widget.insight.precision;
     _noteController.text = widget.insight.note ?? '';
+    if (widget.autoAiSummary) {
+      // Trigger after the first frame so the sheet is visible.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _generateAiSummary();
+      });
+    }
   }
 
   @override
@@ -66,6 +75,26 @@ class _InsightCaptureSheetState extends State<InsightCaptureSheet> {
     insightService.deleteInsight(widget.insight.bookId, widget.insight.id);
     widget.onDeleted();
     Navigator.pop(context);
+  }
+
+  Future<void> _generateAiSummary() async {
+    if (_aiLoading) return;
+    setState(() => _aiLoading = true);
+    final ts = widget.insight.timestampSeconds;
+    final offset = _precision.offsetSeconds;
+    try {
+      final summary = await aiSummaryService.generateSummary(
+        bookTitle: widget.insight.bookId,
+        chapterTitle: widget.insight.chapterTitle,
+        timestampSeconds: ts,
+        rangeStartSeconds: (ts - offset).clamp(0, ts),
+        rangeEndSeconds: ts + offset,
+      );
+      if (!mounted) return;
+      _noteController.text = summary;
+    } finally {
+      if (mounted) setState(() => _aiLoading = false);
+    }
   }
 
   @override
@@ -253,7 +282,52 @@ class _InsightCaptureSheetState extends State<InsightCaptureSheet> {
                       const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 10),
+
+              // AI Summary button
+              GestureDetector(
+                onTap: _aiLoading ? null : _generateAiSummary,
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF6C3AED).withAlpha(20),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: const Color(0xFF6C3AED).withAlpha(60),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (_aiLoading)
+                        const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Color(0xFF6C3AED),
+                          ),
+                        )
+                      else
+                        const Icon(Icons.auto_awesome,
+                            size: 16, color: Color(0xFF6C3AED)),
+                      const SizedBox(width: 8),
+                      Text(
+                        _aiLoading
+                            ? 'Generating summary…'
+                            : 'AI Summary',
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF6C3AED),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
 
               // Action buttons
               Row(

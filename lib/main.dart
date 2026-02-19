@@ -4,6 +4,8 @@ import 'services.dart';
 
 final bookService = BookService();
 final insightService = InsightService();
+final captureSettingsService = CaptureSettingsService();
+final aiSummaryService = AiSummaryService();
 
 void main() {
   runApp(const MainApp());
