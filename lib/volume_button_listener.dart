@@ -5,6 +5,10 @@ enum VolumeButton { up, down }
 
 /// Listens for physical volume button presses via platform channels.
 /// Triggers a capture only on a **down → up** combo within [_comboWindow].
+///
+/// Lock-screen support:
+/// - Android: Uses a BroadcastReceiver for VOLUME_CHANGED_ACTION.
+/// - iOS: Uses AVAudioSession KVO with background audio mode.
 class VolumeButtonListener {
   static const _methodChannel =
       MethodChannel('com.example.product_engineer_task/volume_buttons');
@@ -45,5 +49,10 @@ class VolumeButtonListener {
     _comboTimer = null;
     _waitingForUp = false;
     _methodChannel.invokeMethod('stopListening');
+  }
+
+  /// Triggers a native vibration (works on lock screen).
+  static Future<void> vibrate() async {
+    await _methodChannel.invokeMethod('vibrate');
   }
 }

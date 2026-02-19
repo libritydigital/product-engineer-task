@@ -126,6 +126,7 @@ class _PlayerScreenState extends State<PlayerScreen>
   void _captureInsight() {
     final settings = captureSettingsService.settings;
     HapticFeedback.heavyImpact();
+    VolumeButtonListener.vibrate(); // native vibration — works on lock screen
     _captureAnimController.forward().then((_) {
       _captureAnimController.reverse();
     });

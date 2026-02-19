@@ -1,6 +1,7 @@
 import Flutter
 import UIKit
 import AVFoundation
+import AudioToolbox
 
 @main
 @objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
@@ -50,6 +51,9 @@ class VolumeButtonHandler: NSObject, FlutterStreamHandler {
         result(nil)
       case "stopListening":
         self?.stopObserving()
+        result(nil)
+      case "vibrate":
+        AudioServicesPlaySystemSound(SystemSoundID(4095))
         result(nil)
       default:
         result(FlutterMethodNotImplemented)
