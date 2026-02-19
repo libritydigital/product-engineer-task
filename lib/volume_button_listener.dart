@@ -4,8 +4,7 @@ import 'package:flutter/services.dart';
 enum VolumeButton { up, down }
 
 /// Listens for physical volume button presses via platform channels.
-/// On Android: intercepts key events (prevents volume change while active).
-/// On iOS: observes AVAudioSession outputVolume changes (works with headphones).
+/// Triggers a capture only on a **down → up** combo within [_comboWindow].
 class VolumeButtonListener {
   static const _methodChannel =
       MethodChannel('com.example.product_engineer_task/volume_buttons');
@@ -13,20 +12,28 @@ class VolumeButtonListener {
       EventChannel('com.example.product_engineer_task/volume_button_events');
 
   StreamSubscription? _subscription;
-  Timer? _debounce;
-  static const _debounceDuration = Duration(milliseconds: 500);
+
+  /// How fast the second press must follow the first.
+  static const _comboWindow = Duration(milliseconds: 600);
+
+  bool _waitingForUp = false;
+  Timer? _comboTimer;
 
   void startListening(void Function(VolumeButton) onPressed) {
     _methodChannel.invokeMethod('startListening');
     _subscription = _eventChannel.receiveBroadcastStream().listen((event) {
-      // Debounce to avoid double-captures from quick presses.
-      if (_debounce?.isActive ?? false) return;
-      _debounce = Timer(_debounceDuration, () {});
-
-      if (event == 'up') {
+      if (event == 'down') {
+        // First press: start waiting for volume-up.
+        _waitingForUp = true;
+        _comboTimer?.cancel();
+        _comboTimer = Timer(_comboWindow, () {
+          _waitingForUp = false;
+        });
+      } else if (event == 'up' && _waitingForUp) {
+        // Second press within window — combo detected!
+        _waitingForUp = false;
+        _comboTimer?.cancel();
         onPressed(VolumeButton.up);
-      } else if (event == 'down') {
-        onPressed(VolumeButton.down);
       }
     });
   }
@@ -34,8 +41,9 @@ class VolumeButtonListener {
   void stopListening() {
     _subscription?.cancel();
     _subscription = null;
-    _debounce?.cancel();
-    _debounce = null;
+    _comboTimer?.cancel();
+    _comboTimer = null;
+    _waitingForUp = false;
     _methodChannel.invokeMethod('stopListening');
   }
 }

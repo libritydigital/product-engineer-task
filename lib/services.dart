@@ -24,7 +24,7 @@ class InsightService {
   Insight addInsight({
     required String bookId,
     required int timestampSeconds,
-    required OffsetPrecision precision,
+    required int offsetSeconds,
     required String chapterTitle,
     String? note,
   }) {
@@ -32,7 +32,7 @@ class InsightService {
       id: DateTime.now().microsecondsSinceEpoch.toString(),
       bookId: bookId,
       timestampSeconds: timestampSeconds,
-      precision: precision,
+      offsetSeconds: offsetSeconds,
       chapterTitle: chapterTitle,
       note: note,
     );
@@ -42,12 +42,12 @@ class InsightService {
   }
 
   void updateInsight(String bookId, String insightId,
-      {String? note, OffsetPrecision? precision}) {
+      {String? note, int? offsetSeconds}) {
     final list = _insights[bookId];
     if (list == null) return;
     final i = list.indexWhere((ins) => ins.id == insightId);
     if (i == -1) return;
-    list[i] = list[i].copyWith(note: note, precision: precision);
+    list[i] = list[i].copyWith(note: note, offsetSeconds: offsetSeconds);
   }
 
   void deleteInsight(String bookId, String insightId) {
@@ -61,12 +61,18 @@ class CaptureSettingsService {
   CaptureSettings get settings => _settings;
 
   void update({
-    OffsetPrecision? defaultPrecision,
+    int? defaultOffsetSeconds,
+    int? captureAreaSeconds,
     bool? showCaptureSheet,
     bool? volumeCaptureEnabled,
     bool? autoAiSummary,
   }) {
-    if (defaultPrecision != null) _settings.defaultPrecision = defaultPrecision;
+    if (defaultOffsetSeconds != null) {
+      _settings.defaultOffsetSeconds = defaultOffsetSeconds;
+    }
+    if (captureAreaSeconds != null) {
+      _settings.captureAreaSeconds = captureAreaSeconds;
+    }
     if (showCaptureSheet != null) _settings.showCaptureSheet = showCaptureSheet;
     if (volumeCaptureEnabled != null) {
       _settings.volumeCaptureEnabled = volumeCaptureEnabled;

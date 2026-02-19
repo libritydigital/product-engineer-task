@@ -1,17 +1,3 @@
-/// Configurable precision for insight timestamps.
-/// Accounts for human reaction time — the user taps *after* hearing the insight.
-/// The sync engine uses [startOffset, endOffset] to locate the relevant segment.
-enum OffsetPrecision {
-  exact(0, 'Exact'),
-  low(5, '±5s'),
-  medium(15, '±15s'),
-  high(30, '±30s');
-
-  final int offsetSeconds;
-  final String label;
-  const OffsetPrecision(this.offsetSeconds, this.label);
-}
-
 class Chapter {
   final int id;
   final String title;
@@ -74,7 +60,7 @@ class Insight {
   final String id;
   final String bookId;
   final int timestampSeconds;
-  final OffsetPrecision precision;
+  final int offsetSeconds;
   final String? note;
   final String chapterTitle;
   final DateTime createdAt;
@@ -83,36 +69,36 @@ class Insight {
     required this.id,
     required this.bookId,
     required this.timestampSeconds,
-    required this.precision,
+    required this.offsetSeconds,
     this.note,
     required this.chapterTitle,
     DateTime? createdAt,
   }) : createdAt = createdAt ?? DateTime.now();
 
   Insight copyWith({
-    OffsetPrecision? precision,
+    int? offsetSeconds,
     String? note,
   }) =>
       Insight(
         id: id,
         bookId: bookId,
         timestampSeconds: timestampSeconds,
-        precision: precision ?? this.precision,
+        offsetSeconds: offsetSeconds ?? this.offsetSeconds,
         note: note ?? this.note,
         chapterTitle: chapterTitle,
         createdAt: createdAt,
       );
 
   int get startOffset =>
-      (timestampSeconds - precision.offsetSeconds).clamp(0, timestampSeconds);
-  int get endOffset => timestampSeconds + precision.offsetSeconds;
+      (timestampSeconds - offsetSeconds).clamp(0, timestampSeconds);
+  int get endOffset => timestampSeconds + offsetSeconds;
 
   /// Metadata payload for the Elredo Voice sync engine.
   Map<String, dynamic> toSyncMetadata() => {
         'insight_id': id,
         'book_id': bookId,
         'exact_timestamp': timestampSeconds,
-        'offset_precision': precision.name,
+        'offset_seconds': offsetSeconds,
         'range_start': startOffset,
         'range_end': endOffset,
         'chapter': chapterTitle,
@@ -121,15 +107,23 @@ class Insight {
       };
 }
 
+/// Recommended default offset in seconds.
+const int kRecommendedOffsetSeconds = 15;
+
+/// Default capture area size in seconds.
+const int kDefaultCaptureAreaSeconds = 30;
+
 /// User-configurable defaults for quick-capture (volume button / headphone).
 class CaptureSettings {
-  OffsetPrecision defaultPrecision;
+  int defaultOffsetSeconds;
+  int captureAreaSeconds;
   bool showCaptureSheet;
   bool volumeCaptureEnabled;
   bool autoAiSummary;
 
   CaptureSettings({
-    this.defaultPrecision = OffsetPrecision.medium,
+    this.defaultOffsetSeconds = kRecommendedOffsetSeconds,
+    this.captureAreaSeconds = kDefaultCaptureAreaSeconds,
     this.showCaptureSheet = true,
     this.volumeCaptureEnabled = true,
     this.autoAiSummary = false,

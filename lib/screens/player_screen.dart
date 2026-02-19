@@ -125,7 +125,7 @@ class _PlayerScreenState extends State<PlayerScreen>
 
   void _captureInsight() {
     final settings = captureSettingsService.settings;
-    HapticFeedback.mediumImpact();
+    HapticFeedback.heavyImpact();
     _captureAnimController.forward().then((_) {
       _captureAnimController.reverse();
     });
@@ -134,7 +134,7 @@ class _PlayerScreenState extends State<PlayerScreen>
     final insight = insightService.addInsight(
       bookId: widget.book.bookId,
       timestampSeconds: _positionSeconds,
-      precision: settings.defaultPrecision,
+      offsetSeconds: settings.defaultOffsetSeconds,
       chapterTitle: chapter.title,
     );
 

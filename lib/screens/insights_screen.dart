@@ -312,7 +312,11 @@ class _InsightCard extends StatelessWidget {
                       const SizedBox(height: 6),
                       Row(
                         children: [
-                          _PrecisionChip(label: insight.precision.label),
+                          _PrecisionChip(
+                            label: insight.offsetSeconds == 0
+                                ? 'Exact'
+                                : '±${insight.offsetSeconds}s',
+                          ),
                           const SizedBox(width: 8),
                           Text(
                             _timeAgo(insight.createdAt),

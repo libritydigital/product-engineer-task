@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import '../main.dart';
 import '../models.dart';
 
+const int _kMaxOffsetSeconds = 60;
+
 class CaptureSettingsScreen extends StatefulWidget {
   const CaptureSettingsScreen({super.key});
 
@@ -12,6 +14,15 @@ class CaptureSettingsScreen extends StatefulWidget {
 
 class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
   CaptureSettings get _s => captureSettingsService.settings;
+
+  String _formatArea(int seconds) {
+    if (seconds >= 60) {
+      final m = seconds ~/ 60;
+      final s = seconds % 60;
+      return s == 0 ? '${m}min' : '${m}min ${s}s';
+    }
+    return '${seconds}s';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -94,75 +105,155 @@ class _CaptureSettingsScreenState extends State<CaptureSettingsScreen> {
 
           const SizedBox(height: 24),
 
-          // ── Default Precision section ──
-          _SectionHeader(title: 'Default Offset Precision'),
+          // ── Default Offset section ──
+          _SectionHeader(title: 'Default Offset'),
           const SizedBox(height: 4),
           _SectionDescription(
             text:
-                'The capture range used for quick captures. You can still adjust per-insight in the capture sheet.',
+                'The time offset used for quick captures. You can still adjust per-insight in the capture sheet.',
           ),
           const SizedBox(height: 12),
 
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              children: OffsetPrecision.values.map((p) {
-                final selected = p == _s.defaultPrecision;
-                return Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 4),
-                    child: GestureDetector(
-                      onTap: () {
-                        HapticFeedback.selectionClick();
-                        setState(() {
-                          captureSettingsService.update(defaultPrecision: p);
-                        });
-                      },
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        decoration: BoxDecoration(
-                          color: selected
-                              ? Colors.amber.withAlpha(30)
-                              : Colors.white.withAlpha(10),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: selected
-                                ? Colors.amber
-                                : Colors.white.withAlpha(20),
-                            width: selected ? 1.5 : 1,
-                          ),
-                        ),
-                        child: Column(
-                          children: [
-                            Text(
-                              p.label,
-                              style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w600,
-                                color:
-                                    selected ? Colors.amber : Colors.white70,
-                              ),
-                            ),
-                            if (p.offsetSeconds > 0) ...[
-                              const SizedBox(height: 2),
-                              Text(
-                                '${p.offsetSeconds}s',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  color: selected
-                                      ? Colors.amber.withAlpha(180)
-                                      : Colors.grey[600],
-                                ),
-                              ),
-                            ],
-                          ],
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              decoration: BoxDecoration(
+                color: const Color(0xFF1E1E1E),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        _s.defaultOffsetSeconds == 0
+                            ? 'Exact'
+                            : '±${_s.defaultOffsetSeconds}s',
+                        style: const TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.amber,
                         ),
                       ),
+                      Text(
+                        'Recommended: ±${kRecommendedOffsetSeconds}s',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey[500],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  SliderTheme(
+                    data: SliderThemeData(
+                      activeTrackColor: Colors.amber,
+                      inactiveTrackColor: Colors.white.withAlpha(20),
+                      thumbColor: Colors.amber,
+                      overlayColor: Colors.amber.withAlpha(30),
+                      trackHeight: 4,
+                      thumbShape: const RoundSliderThumbShape(
+                          enabledThumbRadius: 8),
+                    ),
+                    child: Slider(
+                      min: 0,
+                      max: _kMaxOffsetSeconds.toDouble(),
+                      divisions: _kMaxOffsetSeconds,
+                      value: _s.defaultOffsetSeconds.toDouble(),
+                      onChanged: (v) {
+                        HapticFeedback.selectionClick();
+                        setState(() {
+                          captureSettingsService.update(
+                              defaultOffsetSeconds: v.round());
+                        });
+                      },
                     ),
                   ),
-                );
-              }).toList(),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('0s',
+                          style: TextStyle(
+                              fontSize: 11, color: Colors.grey[600])),
+                      Text('${_kMaxOffsetSeconds}s',
+                          style: TextStyle(
+                              fontSize: 11, color: Colors.grey[600])),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 24),
+
+          // ── Capture Area Size section ──
+          _SectionHeader(title: 'Capture Area Size'),
+          const SizedBox(height: 4),
+          _SectionDescription(
+            text: 'Total duration of audio to capture around the bookmark.',
+          ),
+          const SizedBox(height: 12),
+
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              decoration: BoxDecoration(
+                color: const Color(0xFF1E1E1E),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Column(
+                children: [
+                  Text(
+                    _formatArea(_s.captureAreaSeconds),
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.amber,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  SliderTheme(
+                    data: SliderThemeData(
+                      activeTrackColor: Colors.amber,
+                      inactiveTrackColor: Colors.white.withAlpha(20),
+                      thumbColor: Colors.amber,
+                      overlayColor: Colors.amber.withAlpha(30),
+                      trackHeight: 4,
+                      thumbShape: const RoundSliderThumbShape(
+                          enabledThumbRadius: 8),
+                    ),
+                    child: Slider(
+                      min: 10,
+                      max: 300,
+                      divisions: 29,
+                      value: _s.captureAreaSeconds.toDouble(),
+                      onChanged: (v) {
+                        HapticFeedback.selectionClick();
+                        setState(() {
+                          captureSettingsService.update(
+                              captureAreaSeconds: v.round());
+                        });
+                      },
+                    ),
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('10s',
+                          style: TextStyle(
+                              fontSize: 11, color: Colors.grey[600])),
+                      Text('5min',
+                          style: TextStyle(
+                              fontSize: 11, color: Colors.grey[600])),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
 

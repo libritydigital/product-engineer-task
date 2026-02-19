@@ -21,8 +21,10 @@ class InsightCaptureSheet extends StatefulWidget {
   State<InsightCaptureSheet> createState() => _InsightCaptureSheetState();
 }
 
+const int _kMaxOffsetSeconds = 60;
+
 class _InsightCaptureSheetState extends State<InsightCaptureSheet> {
-  late OffsetPrecision _precision;
+  late int _offsetSeconds;
   final _noteController = TextEditingController();
   final _noteFocus = FocusNode();
   bool _aiLoading = false;
@@ -30,7 +32,7 @@ class _InsightCaptureSheetState extends State<InsightCaptureSheet> {
   @override
   void initState() {
     super.initState();
-    _precision = widget.insight.precision;
+    _offsetSeconds = widget.insight.offsetSeconds;
     _noteController.text = widget.insight.note ?? '';
     if (widget.autoAiSummary) {
       // Trigger after the first frame so the sheet is visible.
@@ -65,7 +67,7 @@ class _InsightCaptureSheetState extends State<InsightCaptureSheet> {
       widget.insight.bookId,
       widget.insight.id,
       note: note.isNotEmpty ? note : null,
-      precision: _precision,
+      offsetSeconds: _offsetSeconds,
     );
     widget.onSaved();
     Navigator.pop(context);
@@ -81,14 +83,13 @@ class _InsightCaptureSheetState extends State<InsightCaptureSheet> {
     if (_aiLoading) return;
     setState(() => _aiLoading = true);
     final ts = widget.insight.timestampSeconds;
-    final offset = _precision.offsetSeconds;
     try {
       final summary = await aiSummaryService.generateSummary(
         bookTitle: widget.insight.bookId,
         chapterTitle: widget.insight.chapterTitle,
         timestampSeconds: ts,
-        rangeStartSeconds: (ts - offset).clamp(0, ts),
-        rangeEndSeconds: ts + offset,
+        rangeStartSeconds: (ts - _offsetSeconds).clamp(0, ts),
+        rangeEndSeconds: ts + _offsetSeconds,
       );
       if (!mounted) return;
       _noteController.text = summary;
@@ -100,9 +101,8 @@ class _InsightCaptureSheetState extends State<InsightCaptureSheet> {
   @override
   Widget build(BuildContext context) {
     final ts = widget.insight.timestampSeconds;
-    final offset = _precision.offsetSeconds;
-    final rangeStart = (ts - offset).clamp(0, ts);
-    final rangeEnd = ts + offset;
+    final rangeStart = (ts - _offsetSeconds).clamp(0, ts);
+    final rangeEnd = ts + _offsetSeconds;
 
     return Container(
       decoration: const BoxDecoration(
@@ -172,85 +172,62 @@ class _InsightCaptureSheetState extends State<InsightCaptureSheet> {
               ),
               const SizedBox(height: 24),
 
-              // Variable Offset Precision
-              Text(
-                'Offset Precision',
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.grey[400],
-                  letterSpacing: 0.5,
-                ),
+              // Variable Offset
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Offset',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey[400],
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                  Text(
+                    _offsetSeconds == 0 ? 'Exact' : '±${_offsetSeconds}s',
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.amber,
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 4),
               Text(
-                'Expand the capture range to account for reaction time',
+                'Adjust the capture range to account for reaction time',
                 style: TextStyle(fontSize: 12, color: Colors.grey[600]),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 6),
 
-              // Precision chips
-              Row(
-                children: OffsetPrecision.values.map((p) {
-                  final selected = p == _precision;
-                  return Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 3),
-                      child: GestureDetector(
-                        onTap: () {
-                          HapticFeedback.selectionClick();
-                          setState(() => _precision = p);
-                        },
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 200),
-                          padding: const EdgeInsets.symmetric(vertical: 10),
-                          decoration: BoxDecoration(
-                            color: selected
-                                ? Colors.amber.withAlpha(30)
-                                : Colors.white.withAlpha(10),
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(
-                              color: selected
-                                  ? Colors.amber
-                                  : Colors.white.withAlpha(20),
-                              width: selected ? 1.5 : 1,
-                            ),
-                          ),
-                          child: Column(
-                            children: [
-                              Text(
-                                p.label,
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                  color:
-                                      selected ? Colors.amber : Colors.white70,
-                                ),
-                              ),
-                              if (p.offsetSeconds > 0) ...[
-                                const SizedBox(height: 2),
-                                Text(
-                                  '${p.offsetSeconds}s range',
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    color: selected
-                                        ? Colors.amber.withAlpha(180)
-                                        : Colors.grey[600],
-                                  ),
-                                ),
-                              ],
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  );
-                }).toList(),
+              // Offset slider
+              SliderTheme(
+                data: SliderThemeData(
+                  activeTrackColor: Colors.amber,
+                  inactiveTrackColor: Colors.white.withAlpha(20),
+                  thumbColor: Colors.amber,
+                  overlayColor: Colors.amber.withAlpha(30),
+                  trackHeight: 4,
+                  thumbShape:
+                      const RoundSliderThumbShape(enabledThumbRadius: 7),
+                ),
+                child: Slider(
+                  min: 0,
+                  max: _kMaxOffsetSeconds.toDouble(),
+                  divisions: _kMaxOffsetSeconds,
+                  value: _offsetSeconds.toDouble(),
+                  onChanged: (v) {
+                    HapticFeedback.selectionClick();
+                    setState(() => _offsetSeconds = v.round());
+                  },
+                ),
               ),
-              const SizedBox(height: 12),
 
               // Timeline visualization
-              if (offset > 0) _buildTimelineVisualization(ts, rangeStart, rangeEnd),
+              if (_offsetSeconds > 0)
+                _buildTimelineVisualization(ts, rangeStart, rangeEnd),
 
               const SizedBox(height: 20),
 
@@ -440,7 +417,7 @@ class _InsightCaptureSheetState extends State<InsightCaptureSheet> {
           ),
           const SizedBox(height: 6),
           Text(
-            'Sync engine will search within this ${_precision.offsetSeconds * 2}s window',
+            'Sync engine will search within this ${_offsetSeconds * 2}s window',
             style: TextStyle(fontSize: 11, color: Colors.grey[600]),
           ),
         ],
